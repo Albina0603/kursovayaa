@@ -1,12 +1,39 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Plus, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 export function Navbar() {
   const { data: session } = useSession();
+
+  // Состояние для поиска
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Пример данных для поиска (можете заменить на реальные данные)
+  const data = [
+  ];
+
+  // Фильтрация данных на основе поискового запроса
+  const filteredData = data.filter(item =>
+    item.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Обработка изменений в поле ввода
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Получаем текущую дату
+  const today = new Date();
+  
+  // Форматируем дату
+  const formattedDate = today.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <>
@@ -20,7 +47,7 @@ export function Navbar() {
             <Menu className="h-5 w-5" />
           </Button>
           <Button variant="ghost" className="text-foreground hover:bg-accent">
-            Today
+            {formattedDate} {/* Здесь выводится сегодняшняя дата */}
           </Button>
         </div>
 
@@ -30,8 +57,23 @@ export function Navbar() {
             <Input
               type="search"
               placeholder="Search"
+              value={searchQuery} // Связываем с состоянием
+              onChange={handleSearchChange} // Обработчик изменения
               className="w-full bg-muted text-foreground placeholder-muted-foreground border-none pl-8 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
+          </div>
+
+          {/* Показать результаты поиска */}
+          <div className="mt-2">
+            {filteredData.length === 0 ? (
+              <p>No results found</p> // Если нет совпадений
+            ) : (
+              <ul>
+                {filteredData.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

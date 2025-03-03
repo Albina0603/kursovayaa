@@ -3,31 +3,33 @@ import { eq, not } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/index";
 import { todo } from "@/db/schema";
+import { auth } from "@/auth";
 
-
+async function getUserEmail() {
+  const session = await auth();
+  if (!session?.user?.email) {
+    throw new Error("User must be authenticated to perform this action");
+  }
+  return session.user.email;
+}
 
 export const getData = async () => {
-  const data = await db.select().from(todo);
+  const userEmail = await getUserEmail();
+  const data = await db.select().from(todo).where(eq(todo.email, userEmail));
   return data;
 };
 
-export const addTodoTodo = async (id: number, text: string, user:string) => {
-  await db.insert(todo).values({
-    id: id,
-    text: text,
-    user:user,
-  });
-};
-export const addTodo = async (id: number, text: string, userEmail: string | undefined) => {
-  if (!userEmail) {
-    throw new Error('User email is required');
-  }
+export const addTodo = async (id: string, text: string) => {
+  // Change to string
 
+  const userEmail = await getUserEmail();
   await db.insert(todo).values({
-    id: id,
-    text: text,
-    user: userEmail, // Save the user email in the database
+    id,
+    text,
+    email: userEmail,
+    completed: false,
   });
+  revalidatePath("/dashboard");
 };
 
 export const deleteTodo = async (id: number) => {
@@ -57,4 +59,3 @@ export const editTodo = async (id: number, text: string) => {
 
   revalidatePath("/dashboard");
 };
-
